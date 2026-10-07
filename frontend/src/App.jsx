@@ -1,4 +1,3 @@
-// Routes = a group of pages, Route = one URL connected to one page
 import { Routes, Route } from "react-router-dom";
 import AppointmentList from "./components/AppointmentList";
 import AppointmentForm from "./components/AppointmentForm";
@@ -6,10 +5,12 @@ import AppointmentForm from "./components/AppointmentForm";
 function App() {
   return (
     <Routes>
-      {/* "/" = home page → show the table */}
+      {/* Table page */}
       <Route path="/" element={<AppointmentList />} />
-      {/* "/appointments/new" → show the form */}
+      {/* Add page */}
       <Route path="/appointments/new" element={<AppointmentForm />} />
+      {/* NEW: Edit page (uses the SAME form). :id = the appointment number */}
+      <Route path="/appointments/:id/edit" element={<AppointmentForm />} />
     </Routes>
   );
 }
