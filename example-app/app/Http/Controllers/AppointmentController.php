@@ -14,12 +14,13 @@ class AppointmentController extends Controller
         return $appointments;
     }
 
-    // SAVE a new appointment (Add form)
+    // SAVE a new appointment
     public function store(Request $request)
     {
         $request->validate([
             'patient_name'     => 'required',
             'nic'              => 'required|max:12',
+            'email'            => 'required|email',    
             'phone'            => 'required|max:15',
             'doctor_id'        => 'required|exists:doctors,id',
             'appointment_date' => 'required|date',
@@ -29,6 +30,7 @@ class AppointmentController extends Controller
         $appointment = new Appointment();
         $appointment->patient_name     = $request->patient_name;
         $appointment->nic              = $request->nic;
+        $appointment->email            = $request->email; 
         $appointment->phone            = $request->phone;
         $appointment->doctor_id        = $request->doctor_id;
         $appointment->appointment_date = $request->appointment_date;
@@ -42,16 +44,16 @@ class AppointmentController extends Controller
     // GET ONE appointment (to fill the Edit form)
     public function show(Appointment $appointment)
     {
-        // Laravel already found this appointment using the id in the URL
         return $appointment;
     }
 
-    // UPDATE an existing appointment (Edit form)
+    // UPDATE an existing appointment
     public function update(Request $request, Appointment $appointment)
     {
         $request->validate([
             'patient_name'     => 'required',
             'nic'              => 'required|max:12',
+            'email'            => 'required|email',              
             'phone'            => 'required|max:15',
             'doctor_id'        => 'required|exists:doctors,id',
             'appointment_date' => 'required|date',
@@ -60,6 +62,7 @@ class AppointmentController extends Controller
 
         $appointment->patient_name     = $request->patient_name;
         $appointment->nic              = $request->nic;
+        $appointment->email            = $request->email;
         $appointment->phone            = $request->phone;
         $appointment->doctor_id        = $request->doctor_id;
         $appointment->appointment_date = $request->appointment_date;
@@ -73,7 +76,6 @@ class AppointmentController extends Controller
     // DELETE an appointment
     public function destroy(Appointment $appointment)
     {
-        // Remove it from the database
         $appointment->delete();
 
         return response()->json(['message' => 'Appointment deleted']);

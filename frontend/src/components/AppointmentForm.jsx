@@ -5,6 +5,7 @@ import api from "../services/api";
 function AppointmentForm() {
   const [patientName, setPatientName] = useState("");
   const [nic, setNic] = useState("");
+  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [doctorId, setDoctorId] = useState("");
   const [appointmentDate, setAppointmentDate] = useState("");
@@ -15,12 +16,11 @@ function AppointmentForm() {
 
   const navigate = useNavigate();
 
-  // NEW: read the :id from the URL.
-  // On /appointments/5/edit → id is "5". On /appointments/new → id is empty (undefined).
+  //read the `id from the URL.
   const params = useParams();
   const id = params.id;
 
-  // NEW: decide the page title and button text
+  // decide the page title and button text
   let pageTitle = "Book an Appointment";
   let buttonText = "Submit";
   if (id) {
@@ -31,7 +31,7 @@ function AppointmentForm() {
   useEffect(function () {
     loadDoctors();
 
-    // NEW: if we are editing, load that appointment into the form
+    //if we are editing, load that appointment into the form
     if (id) {
       loadAppointment();
     }
@@ -42,19 +42,26 @@ function AppointmentForm() {
     setDoctors(response.data);
   }
 
-  // NEW: get one appointment from Laravel and fill every box
+  //get one appointment from Laravel and fill every box
   async function loadAppointment() {
     const response = await api.get("/appointments/" + id);
     const appointment = response.data;
 
     setPatientName(appointment.patient_name);
     setNic(appointment.nic);
+
+    // NEW: old appointments may have no email (null), so use "" instead
+    if (appointment.email === null) {
+      setEmail("");
+    } else {
+      setEmail(appointment.email);
+    }
+
     setPhone(appointment.phone);
     setDoctorId(appointment.doctor_id);
     setAppointmentDate(appointment.appointment_date);
 
     // The database gives "09:00:00", but our dropdown uses "09:00".
-    // substring(0, 5) keeps only the first 5 characters → "09:00"
     setAppointmentTime(appointment.appointment_time.substring(0, 5));
 
     // reason can be empty (null) in the database, so use "" instead
@@ -68,9 +75,81 @@ function AppointmentForm() {
   async function handleSubmit(event) {
     event.preventDefault();
 
+    // ==================== VALIDATION ====================
+
+    // 1. Patient name must not be empty
+    if (patientName.trim() === "") {
+      alert("Please enter the patient name");
+      return;
+    }
+
+    // 2. NIC must be 10 or 12 characters
+    if (nic.length !== 10 && nic.length !== 12) {
+      alert("Invalid NIC. It must be 10 or 12 characters");
+      return;
+    }
+
+    // NEW 3. Email must not be empty
+    if (email.trim() === "") {
+      alert("Please enter the email address");
+      return;
+    }
+
+    // NEW 4. Email must contain "@" and "."
+    if (email.includes("@") === false || email.includes(".") === false) {
+      alert("Invalid email address");
+      return;
+    }
+
+    // 5. Phone must not be empty
+    if (phone === "") {
+      alert("Please enter the phone number");
+      return;
+    }
+
+    // 6. Phone must contain only numbers
+    if (isNaN(phone)) {
+      alert("Invalid phone number. Use numbers only");
+      return;
+    }
+
+    // 7. Phone must be exactly 10 digits
+    if (phone.length !== 10) {
+      alert("Invalid phone number. It must be 10 digits");
+      return;
+    }
+
+    // 8. A doctor must be selected
+    if (doctorId === "") {
+      alert("Please select a doctor");
+      return;
+    }
+
+    // 9. A date must be selected
+    if (appointmentDate === "") {
+      alert("Please select an appointment date");
+      return;
+    }
+
+    // 10. The date must not be in the past
+    const today = new Date().toISOString().substring(0, 10);
+    if (appointmentDate < today) {
+      alert("Appointment date cannot be in the past");
+      return;
+    }
+
+    // 11. A time must be selected
+    if (appointmentTime === "") {
+      alert("Please select an appointment time");
+      return;
+    }
+
+    // ====================================================
+
     const appointmentData = {
       patient_name: patientName,
       nic: nic,
+      email: email, // NEW: send the email to Laravel
       phone: phone,
       doctor_id: doctorId,
       appointment_date: appointmentDate,
@@ -80,11 +159,9 @@ function AppointmentForm() {
 
     try {
       if (id) {
-        // NEW: EDITING → send PUT /api/appointments/5 (runs update)
         await api.put("/appointments/" + id, appointmentData);
         alert("Appointment updated successfully!");
       } else {
-        // ADDING → send POST /api/appointments (runs store)
         await api.post("/appointments", appointmentData);
         alert("Appointment saved successfully!");
       }
@@ -97,7 +174,6 @@ function AppointmentForm() {
 
   return (
     <div className="container mt-5">
-      {/* Shows "Book an Appointment" or "Edit Appointment" */}
       <h2 className="mb-4">{pageTitle}</h2>
 
       <form onSubmit={handleSubmit}>
@@ -129,6 +205,23 @@ function AppointmentForm() {
             value={nic}
             onChange={function (e) {
               setNic(e.target.value);
+            }}
+          />
+        </div>
+
+        {/*Email box */}
+        <div className="mb-3">
+          <label htmlFor="email" className="form-label">
+            Email
+          </label>
+          <input
+            type="email"
+            className="form-control"
+            id="email"
+            placeholder="e.g. name@gmail.com"
+            value={email}
+            onChange={function (e) {
+              setEmail(e.target.value);
             }}
           />
         </div>
@@ -225,7 +318,6 @@ function AppointmentForm() {
           ></textarea>
         </div>
 
-        {/* Shows "Submit" or "Update" */}
         <button type="submit" className="btn btn-primary">
           {buttonText}
         </button>

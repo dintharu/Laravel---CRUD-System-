@@ -15,21 +15,20 @@ function AppointmentList() {
     setAppointments(response.data);
   }
 
-  // NEW: runs when a Delete button is clicked
+  // Runs when a Delete button is clicked
   async function handleDelete(id) {
-    // Show a popup with OK / Cancel. "sure" becomes true (OK) or false (Cancel).
     const sure = window.confirm("Do you want to delete this appointment?");
 
-    // If the user clicked Cancel, stop here
     if (sure === false) {
       return;
     }
 
-    // Tell Laravel to delete it: DELETE /api/appointments/5
-    await api.delete("/appointments/" + id);
-
-    // Reload the table so the deleted row disappears
-    loadAppointments();
+    try {
+      await api.delete("/appointments/" + id);
+      loadAppointments();
+    } catch (error) {
+      alert("Delete failed: " + error.message);
+    }
   }
 
   return (
@@ -47,6 +46,8 @@ function AppointmentList() {
             <th>ID</th>
             <th>Patient Name</th>
             <th>NIC</th>
+            <th>Email</th>
+            {/* NEW */}
             <th>Phone</th>
             <th>Doctor</th>
             <th>Date</th>
@@ -59,7 +60,8 @@ function AppointmentList() {
         <tbody>
           {appointments.length === 0 && (
             <tr>
-              <td colSpan="9" className="text-center text-muted">
+              {/* NEW: was 9, now 10 columns */}
+              <td colSpan="10" className="text-center text-muted">
                 No appointments yet
               </td>
             </tr>
@@ -71,32 +73,33 @@ function AppointmentList() {
                 <td>{appointment.id}</td>
                 <td>{appointment.patient_name}</td>
                 <td>{appointment.nic}</td>
+                <td>{appointment.email}</td>
+                {/* NEW */}
                 <td>{appointment.phone}</td>
                 <td>{appointment.doctor.name}</td>
                 <td>{appointment.appointment_date}</td>
                 <td>{appointment.appointment_time}</td>
                 <td>{appointment.reason}</td>
 
-                {/* NEW: Actions column */}
-                <td className="text-center">
-                  {/* Update button: goes to /appointments/5/edit */}
+                <td className="text-center text-nowrap">
                   <Link
                     to={"/appointments/" + appointment.id + "/edit"}
-                    className="btn btn-sm btn-warning me-2"
-                    title="Update"
+                    className="btn btn-sm btn-outline-primary me-2"
+                    title="Edit"
                   >
-                    <i className="bi bi-pencil-square"></i>
+                    <i className="bi bi-pencil-square me-1"></i>
+                    Edit
                   </Link>
 
-                  {/* Delete button: runs handleDelete with this appointment's id */}
                   <button
-                    className="btn btn-sm btn-danger"
+                    className="btn btn-sm btn-outline-danger"
                     title="Delete"
                     onClick={function () {
                       handleDelete(appointment.id);
                     }}
                   >
-                    <i className="bi bi-trash"></i>
+                    <i className="bi bi-trash3 me-1"></i>
+                    Delete
                   </button>
                 </td>
               </tr>

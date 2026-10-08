@@ -9,7 +9,7 @@ function App() {
       <Route path="/" element={<AppointmentList />} />
       {/* Add page */}
       <Route path="/appointments/new" element={<AppointmentForm />} />
-      {/* NEW: Edit page (uses the SAME form). :id = the appointment number */}
+
       <Route path="/appointments/:id/edit" element={<AppointmentForm />} />
     </Routes>
   );
